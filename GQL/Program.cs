@@ -4,6 +4,8 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using GQL.GraphQL;
 using GQL.Data;
 using GQL.Services;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace GQL
 {
@@ -17,7 +19,20 @@ namespace GQL
 
             builder.Services.AddPooledDbContextFactory<AppDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-            
+
+            builder.Services.AddAuthentication("Bearer")
+                .AddJwtBearer("Bearer", options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                    };
+                });
             builder.Services.AddAuthorization();
 
             builder.Services
@@ -37,6 +52,8 @@ namespace GQL
             DbInitializer.Seed(app);
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.MapGraphQL();
             app.Run();

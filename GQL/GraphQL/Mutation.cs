@@ -19,31 +19,46 @@ namespace GQL.GraphQL
         {
             var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
+            {
                 throw new GraphQLException(ErrorBuilder.New()
                     .SetMessage("Пользователь не авторизован")
                     .Build());
+            }
 
-            var userId = int.Parse(userIdClaim.Value);
+            var role = user.FindFirst(ClaimTypes.Role)?.Value;
+            var userId = int.Parse(user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var createdById = (role == "Admin" && input.CreatedById != 0)
+                ? input.CreatedById
+                : userId;
 
             var task = new TaskItem
             {
                 Title = input.Title,
                 Description = input.Description,
                 Status = input.Status,
-                CreatedAt = DateTime.UtcNow,
-                CreatedById = userId
+                CreatedById = createdById
             };
 
             context.Tasks.Add(task);
             await context.SaveChangesAsync();
+            await context.Entry(task)
+                .Reference(t => t.CreatedBy)
+                .LoadAsync();
+
             return task;
         }
+
 
         [Authorize]
         public async Task<TaskItem> UpdateTaskAsync(UpdateTaskInput input, [Service] AppDbContext context, ClaimsPrincipal user)
         {
             var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
             var roleClaim = user.FindFirst(ClaimTypes.Role);
+
+
+            Console.WriteLine(user.Identity?.IsAuthenticated); // должно быть true
+            Console.WriteLine(user.FindFirst(ClaimTypes.Role)?.Value); // должно быть Admin
 
             if (userIdClaim is null || roleClaim is null)
             {
@@ -84,27 +99,8 @@ namespace GQL.GraphQL
             return task;
         }
 
-        public async Task<TaskItem?> UpdateTaskAsync(int id, UpdateTaskInput input, [Service] IDbContextFactory<AppDbContext> contextFactory)
-        {
-            await using var context = await contextFactory.CreateDbContextAsync();
 
-            var task = await context.Tasks.FindAsync(id);
-            if (task is null)
-                return null;
-
-            if (!string.IsNullOrWhiteSpace(input.Title))
-                task.Title = input.Title;
-
-            if (!string.IsNullOrWhiteSpace(input.Status))
-                task.Status = input.Status;
-
-            if (!string.IsNullOrWhiteSpace(input.Description))
-                task.Description = input.Description;
-
-            await context.SaveChangesAsync();
-            return task;
-        }
-
+        [Authorize(Roles = ["Admin"])]
         public async Task<bool> DeleteTaskAsync(int id, [Service] IDbContextFactory<AppDbContext> contextFactory)
         {
             await using var context = await contextFactory.CreateDbContextAsync();
