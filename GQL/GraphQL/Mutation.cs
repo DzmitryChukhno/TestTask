@@ -111,7 +111,7 @@ namespace GQL.GraphQL
         }
 
         [GraphQLName("login")]
-        public LoginPayload Login(AuthInput input, [Service] AuthService auth, [Service] IConfiguration config)
+        public async Task<LoginPayload> Login(AuthInput input, [Service] AuthService auth, [Service] AppDbContext context, [Service] IConfiguration config)
         {
             var token = auth.Authenticate(input.Username, input.Password);
             if (token is null)
@@ -120,6 +120,21 @@ namespace GQL.GraphQL
                     .SetMessage("Неверный логин или пароль")
                     .Build());
             }
+
+
+            // TODO REFRESH
+
+            //var refresh = new RefreshToken
+            //{
+            //    Token = Guid.NewGuid().ToString(),
+            //    ExpiresAt = DateTime.UtcNow.AddDays(7),
+            //    UserId = user.Id,
+            //    IsRevoked = false
+            //};
+
+            //context.RefreshTokens.Add(refresh);
+            //await context.SaveChangesAsync();
+
 
             return new LoginPayload(
                 token,

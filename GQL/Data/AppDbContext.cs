@@ -9,5 +9,6 @@ namespace GQL.Data
 
         public DbSet<User> Users => Set<User>();
         public DbSet<TaskItem> Tasks => Set<TaskItem>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     }
 }
