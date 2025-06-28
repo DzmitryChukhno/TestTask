@@ -42,6 +42,7 @@ public class Query
     }
 
 
+    [UsePaging(IncludeTotalCount = true)]
     [Authorize(Roles = ["Admin" ])]
     [UseProjection]
     [UseFiltering]

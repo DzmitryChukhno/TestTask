@@ -8,7 +8,6 @@ using HotChocolate.Authorization;
 using HotChocolate.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using HotChocolate.Authorization;
 
 namespace GQL.GraphQL
 {
@@ -56,9 +55,6 @@ namespace GQL.GraphQL
             var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
             var roleClaim = user.FindFirst(ClaimTypes.Role);
 
-
-            Console.WriteLine(user.Identity?.IsAuthenticated); // должно быть true
-            Console.WriteLine(user.FindFirst(ClaimTypes.Role)?.Value); // должно быть Admin
 
             if (userIdClaim is null || roleClaim is null)
             {

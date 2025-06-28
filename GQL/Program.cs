@@ -1,6 +1,5 @@
 using System;
 using Microsoft.EntityFrameworkCore;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using GQL.GraphQL;
 using GQL.Data;
 using GQL.Services;
